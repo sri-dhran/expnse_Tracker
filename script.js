@@ -1,16 +1,3 @@
-import { 
-    collection, 
-    addDoc, 
-    onSnapshot, 
-    query, 
-    orderBy, 
-    serverTimestamp, 
-    doc, 
-    updateDoc, 
-    deleteDoc 
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-import { db } from './firebase-config.js';
-
 /**
  * Expenxe - Premium Expense Tracker
  * Core Logic & State Management
@@ -18,7 +5,7 @@ import { db } from './firebase-config.js';
 
 // App State
 let state = {
-    transactions: [], // Will be populated by Firestore
+    transactions: JSON.parse(localStorage.getItem('transactions')) || [],
     settings: JSON.parse(localStorage.getItem('settings')) || {
         budget: 15000,
         theme: 'light'
@@ -29,6 +16,18 @@ let state = {
         line: null
     }
 };
+
+// Mock Data if empty
+if (state.transactions.length === 0) {
+    state.transactions = [
+        { id: '1', amount: 50000, category: 'Income', date: '2026-03-01', type: 'income', description: 'Monthly Salary' },
+        { id: '2', amount: 1500, category: 'Food', date: '2026-03-05', type: 'expense', description: 'Dinner at Italian Place' },
+        { id: '3', amount: 4500, category: 'Shopping', date: '2026-03-10', type: 'expense', description: 'New Sneakers' },
+        { id: '4', amount: 800, category: 'Transport', date: '2026-03-12', type: 'expense', description: 'Uber Ride' },
+        { id: '5', amount: 2000, category: 'Entertainment', date: '2026-03-15', type: 'expense', description: 'Movie Night & Popcorn' }
+    ];
+    localStorage.setItem('transactions', JSON.stringify(state.transactions));
+}
 
 // DOM Elements
 const elements = {
@@ -47,27 +46,8 @@ const elements = {
 // --- Initialization ---
 function init() {
     applyTheme();
+    renderCurrentView();
     setupEventListeners();
-    syncWithFirestore();
-}
-
-function syncWithFirestore() {
-    const q = query(collection(db, "expenses"), orderBy("date", "desc"));
-    
-    onSnapshot(q, (snapshot) => {
-        state.transactions = snapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                ...data,
-                // Convert Firestore Timestamp to string for compatibility with existing logic
-                date: data.date?.toDate ? data.date.toDate().toISOString().split('T')[0] : data.date
-            };
-        });
-        renderCurrentView();
-    }, (error) => {
-        console.error("Error syncing with Firestore:", error);
-    });
 }
 
 // --- Theme Management ---
@@ -88,6 +68,10 @@ function toggleTheme() {
 }
 
 // --- Persistence ---
+function saveTransactions() {
+    localStorage.setItem('transactions', JSON.stringify(state.transactions));
+}
+
 function saveSettings() {
     localStorage.setItem('settings', JSON.stringify(state.settings));
 }
@@ -347,48 +331,43 @@ function setupEventListeners() {
     elements.transactionForm.addEventListener('submit', handleFormSubmit);
 }
 
-async function handleFormSubmit(e) {
+function handleFormSubmit(e) {
     e.preventDefault();
     const id = document.getElementById('edit-id').value;
     const amount = parseFloat(document.getElementById('amount').value);
     const category = document.getElementById('category').value;
-    const dateInput = document.getElementById('date').value;
+    const date = document.getElementById('date').value;
     const type = document.getElementById('type').value;
     const description = document.getElementById('description').value;
 
-    const transactionData = {
-        amount,
-        category,
-        date: dateInput ? new Date(dateInput) : serverTimestamp(),
-        type,
-        description
-    };
-
-    try {
-        if (id) {
-            // Edit existing
-            const docRef = doc(db, "expenses", id);
-            await updateDoc(docRef, transactionData);
-        } else {
-            // Create new
-            await addDoc(collection(db, "expenses"), transactionData);
-            // Local check for budget alert
-            checkBudgetAlert({ type, amount });
-        }
-        elements.modal.classList.remove('active');
-    } catch (error) {
-        console.error("Error saving transaction:", error);
-        alert("Failed to save transaction. Check console for details.");
+    if (id) {
+        // Edit existing
+        const index = state.transactions.findIndex(t => t.id === id);
+        state.transactions[index] = { id, amount, category, date, type, description };
+    } else {
+        // Create new
+        const newTransaction = {
+            id: Date.now().toString(),
+            amount,
+            category,
+            date,
+            type,
+            description
+        };
+        state.transactions.push(newTransaction);
+        checkBudgetAlert(newTransaction);
     }
+
+    saveTransactions();
+    elements.modal.classList.remove('active');
+    renderCurrentView();
 }
 
-async function deleteTransaction(id) {
+function deleteTransaction(id) {
     if (confirm('Are you sure you want to delete this transaction?')) {
-        try {
-            await deleteDoc(doc(db, "expenses", id));
-        } catch (error) {
-            console.error("Error deleting document: ", error);
-        }
+        state.transactions = state.transactions.filter(t => t.id !== id);
+        saveTransactions();
+        renderCurrentView();
     }
 }
 
@@ -614,8 +593,10 @@ function checkBudgetAlert(newTransaction) {
 }
 
 function clearAllData() {
-    if (confirm('Are you sure? This will reset your budget and local settings. To delete transaction data permanently, please clear your "expenses" collection in the Firebase Console.')) {
+    if (confirm('Are you serious? This will delete all your transactions and reset settings.')) {
+        state.transactions = [];
         state.settings.budget = 0;
+        saveTransactions();
         saveSettings();
         renderCurrentView();
     }
@@ -623,12 +604,3 @@ function clearAllData() {
 
 // Start the app
 init();
-
-// Expose functions to window for HTML event handlers (since this is a module)
-window.switchView = switchView;
-window.editTransaction = editTransaction;
-window.deleteTransaction = deleteTransaction;
-window.handleFilterSort = handleFilterSort;
-window.updateBudget = updateBudget;
-window.toggleTheme = toggleTheme;
-window.clearAllData = clearAllData;
