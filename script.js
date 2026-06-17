@@ -422,6 +422,214 @@ window.clearAllData = function() {
     }
 };
 
+// --- Calculator State & Logic ---
+let calcState = {
+    expr: '',
+    type: 'expense',
+    category: 'Food'
+};
+
+function formatExpression(str) {
+    if (!str) return '0';
+    const tokens = str.split(/([+\-])/);
+    return tokens.map(t => {
+        if (t === '+' || t === '-') {
+            return ` ${t} `;
+        }
+        if (!t) return '';
+        const parts = t.split('.');
+        let integerPart = parts[0];
+        let decimalPart = parts.length > 1 ? '.' + parts[1] : '';
+        
+        if (integerPart) {
+            if (integerPart.length > 1 && integerPart.startsWith('0') && !integerPart.startsWith('0.')) {
+                integerPart = integerPart.replace(/^0+/, '') || '0';
+            }
+            let lastThree = integerPart.substring(integerPart.length - 3);
+            let otherParts = integerPart.substring(0, integerPart.length - 3);
+            if (otherParts !== '') {
+                lastThree = ',' + lastThree;
+            }
+            const formattedOther = otherParts.replace(/\B(?=(\d{2})+(?!\d))/g, ",");
+            integerPart = formattedOther + lastThree;
+        }
+        return integerPart + decimalPart;
+    }).join('');
+}
+
+function evaluateExpression(str) {
+    let sanitized = str.replace(/[^0-9.+\-]/g, '');
+    sanitized = sanitized.replace(/^[+\-]+|[+\-]+$/g, '');
+    if (!sanitized) return 0;
+    
+    try {
+        sanitized = sanitized.replace(/\++/g, '+').replace(/\-+/g, '-').replace(/\+\-/g, '-').replace(/\-\+/g, '-');
+        const numRegex = /\d+\.?\d*/g;
+        const opRegex = /[+\-]/g;
+        
+        const numbers = sanitized.match(numRegex);
+        const operators = sanitized.match(opRegex) || [];
+        
+        if (!numbers) return 0;
+        
+        let total = parseFloat(numbers[0]);
+        for (let i = 0; i < operators.length; i++) {
+            const nextNum = parseFloat(numbers[i + 1]);
+            if (isNaN(nextNum)) continue;
+            
+            if (operators[i] === '+') {
+                total += nextNum;
+            } else if (operators[i] === '-') {
+                total -= nextNum;
+            }
+        }
+        return total;
+    } catch (e) {
+        return 0;
+    }
+}
+
+function updateCalcDisplay() {
+    const displayVal = document.getElementById('calc-amount-val');
+    const previewVal = document.getElementById('calc-preview-val');
+    
+    if (displayVal) {
+        displayVal.textContent = formatExpression(calcState.expr);
+    }
+    
+    if (previewVal) {
+        const hasOperator = calcState.expr.includes('+') || calcState.expr.includes('-');
+        if (hasOperator) {
+            const result = evaluateExpression(calcState.expr);
+            previewVal.textContent = `= ₹ ${new Intl.NumberFormat('en-IN').format(result)}`;
+        } else {
+            previewVal.textContent = '';
+        }
+    }
+}
+
+function handleCalcKeyPress(val) {
+    if (val === 'backspace') {
+        if (calcState.expr.length > 0) {
+            calcState.expr = calcState.expr.slice(0, -1);
+        }
+    } else if (val === '+' || val === '-') {
+        if (calcState.expr.length > 0) {
+            const lastChar = calcState.expr[calcState.expr.length - 1];
+            if (lastChar === '+' || lastChar === '-') {
+                calcState.expr = calcState.expr.slice(0, -1) + val;
+            } else {
+                calcState.expr += val;
+            }
+        }
+    } else if (val === '.') {
+        const tokens = calcState.expr.split(/[+\-]/);
+        const currentToken = tokens[tokens.length - 1];
+        if (!currentToken.includes('.')) {
+            calcState.expr += '.';
+        }
+    } else {
+        if (calcState.expr === '0' && val === '0') return;
+        if (calcState.expr === '0' && val !== '0') {
+            calcState.expr = val;
+        } else {
+            calcState.expr += val;
+        }
+    }
+    updateCalcDisplay();
+}
+
+function selectCalcCategory(catVal) {
+    calcState.category = catVal;
+    
+    const pills = document.querySelectorAll('.calc-cat-pill');
+    pills.forEach(p => {
+        p.classList.toggle('selected', p.dataset.value === catVal);
+    });
+    
+    // Auto sync type chip
+    if (catVal === 'Income') {
+        setCalcType('income');
+    } else {
+        setCalcType('expense');
+    }
+}
+
+function setCalcType(typeVal) {
+    calcState.type = typeVal;
+    
+    const chips = document.querySelectorAll('.calc-type-chip');
+    chips.forEach(c => {
+        c.classList.toggle('active', c.dataset.type === typeVal);
+    });
+}
+
+function selectCalcType(typeVal) {
+    setCalcType(typeVal);
+    if (typeVal === 'income' && calcState.category !== 'Income') {
+        selectCalcCategory('Income');
+    } else if (typeVal === 'expense' && calcState.category === 'Income') {
+        selectCalcCategory('Food');
+    }
+}
+
+function resetCalculator() {
+    calcState.expr = '';
+    calcState.type = 'expense';
+    calcState.category = 'Food';
+    
+    const pills = document.querySelectorAll('.calc-cat-pill');
+    pills.forEach(p => {
+        p.classList.toggle('selected', p.dataset.value === 'Food');
+    });
+    
+    const chips = document.querySelectorAll('.calc-type-chip');
+    chips.forEach(c => {
+        c.classList.toggle('active', c.dataset.type === 'expense');
+    });
+    
+    updateCalcDisplay();
+}
+
+function saveQuickTransaction() {
+    const finalAmount = evaluateExpression(calcState.expr);
+    if (finalAmount <= 0) {
+        alert('Please enter a valid amount.');
+        return;
+    }
+    
+    const tx = {
+        id: generateId(),
+        amount: finalAmount,
+        category: calcState.category,
+        date: new Date().toISOString().split('T')[0],
+        type: calcState.type,
+        description: calcState.category
+    };
+    
+    state.transactions.push(tx);
+    StorageService.saveTransactions(state.transactions);
+    closeSheet();
+    renderCurrentView();
+}
+
+function switchToAdvancedForm() {
+    const finalAmount = evaluateExpression(calcState.expr);
+    
+    document.getElementById('edit-id').value = '';
+    document.getElementById('amount').value = finalAmount > 0 ? finalAmount : '';
+    document.getElementById('type').value = calcState.type;
+    document.getElementById('category').value = calcState.category;
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('description').value = '';
+    
+    elements.categoryGridItems.forEach(i => {
+        i.classList.toggle('selected', i.dataset.value === calcState.category);
+    });
+    
+    openSheet('sheet-transaction-form');
+}
+
 // --- Form & Events ---
 function setupEventListeners() {
     elements.navItems.forEach(item => {
@@ -434,11 +642,47 @@ function setupEventListeners() {
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
         document.getElementById('category').value = '';
         elements.categoryGridItems.forEach(i => i.classList.remove('selected'));
-        openSheet('sheet-transaction-form');
+        
+        resetCalculator();
+        openSheet('sheet-calculator-entry');
     };
     
     if (elements.fabAdd) elements.fabAdd.addEventListener('click', triggerAddSheet);
     if (elements.addBtnDesktop) elements.addBtnDesktop.addEventListener('click', triggerAddSheet);
+
+    // Calculator Type selection
+    document.querySelectorAll('.calc-type-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            selectCalcType(chip.dataset.type);
+        });
+    });
+
+    // Calculator Category selection
+    document.querySelectorAll('.calc-cat-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            selectCalcCategory(pill.dataset.value);
+        });
+    });
+
+    // Calculator Numpad button click
+    document.querySelectorAll('.calc-btn').forEach(btn => {
+        if (btn.id === 'calc-done-btn') return;
+        btn.addEventListener('click', () => {
+            handleCalcKeyPress(btn.dataset.val);
+        });
+    });
+
+    // Calculator Save
+    const doneBtn = document.getElementById('calc-done-btn');
+    if (doneBtn) {
+        doneBtn.addEventListener('click', saveQuickTransaction);
+    }
+
+    // Switch to advanced form
+    const advBtn = document.getElementById('switch-to-advanced-btn');
+    if (advBtn) {
+        advBtn.addEventListener('click', switchToAdvancedForm);
+    }
 
     // Category Grid Selection
     elements.categoryGridItems.forEach(item => {

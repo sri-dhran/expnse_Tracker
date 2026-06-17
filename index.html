@@ -105,8 +105,74 @@
         </div>
         <div class="sheet-content-container">
             
+            <!-- Calculator Quick Entry View -->
+            <div id="sheet-calculator-entry" class="sheet-view active">
+                <div class="calc-display-container">
+                    <div class="calc-type-selector">
+                        <span class="calc-type-chip active" data-type="expense">Expense</span>
+                        <span class="calc-type-chip" data-type="income">Income</span>
+                    </div>
+                    <div class="calc-amount-display">
+                        <span class="calc-currency">₹</span>
+                        <span id="calc-amount-val">0</span>
+                    </div>
+                    <div class="calc-preview" id="calc-preview-val"></div>
+                </div>
+                
+                <div class="calc-category-container">
+                    <div class="calc-category-scroll" id="calc-category-scroll">
+                        <div class="calc-cat-pill selected" data-value="Food">
+                            <i class="fas fa-utensils"></i><span>Food</span>
+                        </div>
+                        <div class="calc-cat-pill" data-value="Transport">
+                            <i class="fas fa-car"></i><span>Transport</span>
+                        </div>
+                        <div class="calc-cat-pill" data-value="Shopping">
+                            <i class="fas fa-shopping-bag"></i><span>Shopping</span>
+                        </div>
+                        <div class="calc-cat-pill" data-value="Entertainment">
+                            <i class="fas fa-film"></i><span>Fun</span>
+                        </div>
+                        <div class="calc-cat-pill" data-value="Health">
+                            <i class="fas fa-heartbeat"></i><span>Health</span>
+                        </div>
+                        <div class="calc-cat-pill" data-value="Income">
+                            <i class="fas fa-money-bill-wave"></i><span>Income</span>
+                        </div>
+                        <div class="calc-cat-pill" data-value="Other">
+                            <i class="fas fa-box"></i><span>Other</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-numpad">
+                    <button class="calc-btn" data-val="7">7</button>
+                    <button class="calc-btn" data-val="8">8</button>
+                    <button class="calc-btn" data-val="9">9</button>
+                    <button class="calc-btn action" data-val="backspace"><i class="fas fa-backspace"></i></button>
+
+                    <button class="calc-btn" data-val="4">4</button>
+                    <button class="calc-btn" data-val="5">5</button>
+                    <button class="calc-btn" data-val="6">6</button>
+                    <button class="calc-btn action-operator" data-val="+">+</button>
+
+                    <button class="calc-btn" data-val="1">1</button>
+                    <button class="calc-btn" data-val="2">2</button>
+                    <button class="calc-btn" data-val="3">3</button>
+                    <button class="calc-btn action-operator" data-val="-">-</button>
+
+                    <button class="calc-btn" data-val=".">.</button>
+                    <button class="calc-btn" data-val="0">0</button>
+                    <button class="calc-btn done-btn" id="calc-done-btn"><i class="fas fa-check"></i></button>
+                </div>
+
+                <div class="calc-footer">
+                    <button type="button" class="btn-text" id="switch-to-advanced-btn">Show More Details</button>
+                </div>
+            </div>
+
             <!-- Transaction Form View -->
-            <div id="sheet-transaction-form" class="sheet-view active full-screen-form">
+            <div id="sheet-transaction-form" class="sheet-view full-screen-form">
                 <form id="transaction-form" class="flex-form">
                     <input type="hidden" id="edit-id">
                     
