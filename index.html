@@ -32,8 +32,12 @@
                         <span>Dashboard</span>
                     </li>
                     <li class="nav-item" data-view="transactions">
-                        <i class="fas fa-exchange-alt"></i>
+                        <i class="fas fa-list"></i>
                         <span>Transactions</span>
+                    </li>
+                    <li class="nav-item" data-view="analytics">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Analytics</span>
                     </li>
                     <li class="nav-item" data-view="settings">
                         <i class="fas fa-cog"></i>
@@ -61,7 +65,8 @@
             <header class="content-header">
                 <h1 id="view-title">Dashboard</h1>
                 <div class="header-actions">
-                    <button id="add-transaction-btn" class="btn btn-primary">
+                    <!-- Desktop add button (hidden on mobile) -->
+                    <button id="add-transaction-btn-desktop" class="btn btn-primary desktop-only">
                         <i class="fas fa-plus"></i>
                         <span>Add Transaction</span>
                     </button>
@@ -76,9 +81,18 @@
                 <!-- Transactions content will be injected here -->
             </div>
 
+            <div id="analytics-view" class="view-section">
+                <!-- Analytics content will be injected here -->
+            </div>
+
             <div id="settings-view" class="view-section">
                 <!-- Settings content will be injected here -->
             </div>
+            
+            <!-- Floating Action Button for Mobile -->
+            <button id="fab-add" class="fab-btn mobile-only">
+                <i class="fas fa-plus"></i>
+            </button>
         </main>
     </div>
 
@@ -100,6 +114,11 @@
                     <div class="form-group">
                         <label for="amount">Amount</label>
                         <input type="number" id="amount" step="0.01" placeholder="0.00" required>
+                        <div class="quick-amounts">
+                            <button type="button" class="quick-amount-btn" data-val="100">+100</button>
+                            <button type="button" class="quick-amount-btn" data-val="500">+500</button>
+                            <button type="button" class="quick-amount-btn" data-val="1000">+1000</button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Category</label>

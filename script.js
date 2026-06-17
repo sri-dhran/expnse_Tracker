@@ -34,10 +34,12 @@ const elements = {
     navItems: document.querySelectorAll('.nav-item'),
     viewSections: document.querySelectorAll('.view-section'),
     viewTitle: document.getElementById('view-title'),
-    addBtn: document.getElementById('add-transaction-btn'),
+    addBtnDesktop: document.getElementById('add-transaction-btn-desktop'),
+    fabAdd: document.getElementById('fab-add'),
     transactionForm: document.getElementById('transaction-form'),
     dashboardView: document.getElementById('dashboard-view'),
     transactionsView: document.getElementById('transactions-view'),
+    analyticsView: document.getElementById('analytics-view'),
     settingsView: document.getElementById('settings-view')
 };
 
@@ -177,6 +179,8 @@ function renderCurrentView() {
         renderDashboard();
     } else if (state.currentView === 'transactions') {
         renderTransactions();
+    } else if (state.currentView === 'analytics') {
+        renderAnalytics();
     } else if (state.currentView === 'settings') {
         renderSettings();
     }
@@ -185,32 +189,30 @@ function renderCurrentView() {
 function renderDashboard() {
     const { totalIncome, totalExpenses, balance } = calculateTotals();
     const recentTransactions = state.transactions.slice(-5).reverse();
-    const highestCategory = getHighestExpenseCategory();
     const budgetPercent = Math.min((totalExpenses / state.settings.budget) * 100, 100);
     const budgetStatusClass = budgetPercent > 90 ? 'danger' : budgetPercent > 70 ? 'warning' : '';
 
     elements.dashboardView.innerHTML = `
         <div class="dashboard-grid">
-            <div class="stats-cards">
-                <div class="card glass stat-card">
+            <!-- Total Balance Card -->
+            <div class="card glass stat-card highlight" style="flex-direction: column; align-items: flex-start; padding: 2rem;">
+                <p class="stat-label" style="font-size: 1rem;">Total Balance</p>
+                <h3 class="stat-value" style="font-size: 2.5rem; margin-top: 0.5rem;">${formatCurrency(balance)}</h3>
+            </div>
+            
+            <div class="stats-cards" style="grid-template-columns: 1fr 1fr;">
+                <div class="card glass stat-card" style="padding: 1.5rem;">
                     <div class="stat-icon income"><i class="fas fa-arrow-up"></i></div>
                     <div class="stat-info">
-                        <p class="stat-label">Total Income</p>
-                        <h3 class="stat-value">${formatCurrency(totalIncome)}</h3>
+                        <p class="stat-label">Income</p>
+                        <h3 class="stat-value" style="font-size: 1.25rem;">${formatCurrency(totalIncome)}</h3>
                     </div>
                 </div>
-                <div class="card glass stat-card">
+                <div class="card glass stat-card" style="padding: 1.5rem;">
                     <div class="stat-icon expense"><i class="fas fa-arrow-down"></i></div>
                     <div class="stat-info">
-                        <p class="stat-label">Total Expenses</p>
-                        <h3 class="stat-value">${formatCurrency(totalExpenses)}</h3>
-                    </div>
-                </div>
-                <div class="card glass stat-card highlight">
-                    <div class="stat-icon balance"><i class="fas fa-wallet"></i></div>
-                    <div class="stat-info">
-                        <p class="stat-label">Current Balance</p>
-                        <h3 class="stat-value">${formatCurrency(balance)}</h3>
+                        <p class="stat-label">Expense</p>
+                        <h3 class="stat-value" style="font-size: 1.25rem;">${formatCurrency(totalExpenses)}</h3>
                     </div>
                 </div>
             </div>
@@ -226,64 +228,78 @@ function renderDashboard() {
                 <p class="budget-meta">${(100 - budgetPercent).toFixed(1)}% remaining this month</p>
             </div>
 
-            <div class="charts-grid">
-                <div class="card glass chart-card">
-                    <h3>Expenses by Category</h3>
-                    <div class="chart-container">
-                        <canvas id="categoryChart"></canvas>
-                    </div>
+            <div class="card glass recent-transactions-card">
+                <div class="card-header">
+                    <h3>Recent Transactions</h3>
+                    <button class="btn-text" onclick="switchView('transactions')">View All</button>
                 </div>
-                <div class="card glass chart-card">
-                    <h3>Expense Trend</h3>
-                    <div class="chart-container">
-                        <canvas id="trendChart"></canvas>
-                    </div>
+                <div class="transaction-list">
+                    ${recentTransactions.length > 0 ? recentTransactions.map(t => `
+                        <div class="transaction-item">
+                            <div class="t-icon category-${t.category.toLowerCase()}">
+                                <i class="${getCategoryIcon(t.category)}"></i>
+                            </div>
+                            <div class="t-details">
+                                <p class="t-desc">${t.description}</p>
+                                <p class="t-meta">${t.category} • ${formatDate(t.date)}</p>
+                            </div>
+                            <div class="t-amount ${t.type}">
+                                ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+                            </div>
+                        </div>
+                    `).join('') : '<p class="empty-state">No recent transactions</p>'}
                 </div>
             </div>
+        </div>
+    `;
+}
 
-            <div class="dashboard-main-grid">
-                <div class="card glass recent-transactions-card">
-                    <div class="card-header">
-                        <h3>Recent Transactions</h3>
-                        <button class="btn-text" onclick="switchView('transactions')">View All</button>
-                    </div>
-                    <div class="transaction-list">
-                        ${recentTransactions.length > 0 ? recentTransactions.map(t => `
-                            <div class="transaction-item">
-                                <div class="t-icon category-${t.category.toLowerCase()}">
-                                    <i class="${getCategoryIcon(t.category)}"></i>
-                                </div>
-                                <div class="t-details">
-                                    <p class="t-desc">${t.description}</p>
-                                    <p class="t-meta">${t.category} • ${formatDate(t.date)}</p>
-                                </div>
-                                <div class="t-amount ${t.type}">
-                                    ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
-                                </div>
-                            </div>
-                        `).join('') : '<p class="empty-state">No recent transactions</p>'}
-                    </div>
+function renderAnalytics() {
+    const highestCategory = getHighestExpenseCategory();
+
+    elements.analyticsView.innerHTML = `
+        <div class="dashboard-grid analytics-grid">
+            <div class="card glass chart-card analytics-full">
+                <h3>Income vs Expense</h3>
+                <div class="chart-container">
+                    <canvas id="incomeExpenseChart"></canvas>
                 </div>
-
-                <div class="card glass category-analysis-card">
-                    <h3>Top Spending</h3>
-                    <div class="analysis-content">
-                        ${highestCategory ? `
-                            <div class="highest-category">
-                                <div class="h-icon category-${highestCategory.name.toLowerCase()}">
-                                    <i class="${getCategoryIcon(highestCategory.name)}"></i>
-                                </div>
-                                <h4>${highestCategory.name}</h4>
-                                <p>${formatCurrency(highestCategory.amount)} spent</p>
+            </div>
+            
+            <div class="card glass chart-card">
+                <h3>Expenses by Category</h3>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card glass chart-card">
+                <h3>Expense Trend</h3>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card glass category-analysis-card analytics-full">
+                <h3>Top Spending Category</h3>
+                <div class="analysis-content">
+                    ${highestCategory ? `
+                        <div class="highest-category" style="display:flex; align-items:center; gap: 1rem; padding: 1rem; background: var(--sidebar-bg); border-radius: 15px;">
+                            <div class="h-icon category-${highestCategory.name.toLowerCase()}" style="width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">
+                                <i class="${getCategoryIcon(highestCategory.name)}"></i>
                             </div>
-                        ` : '<p class="empty-state">No expenses found</p>'}
-                    </div>
+                            <div>
+                                <h4 style="margin-bottom:0.25rem;">${highestCategory.name}</h4>
+                                <p style="font-size:1.25rem; font-weight:700; color:var(--danger);">${formatCurrency(highestCategory.amount)}</p>
+                            </div>
+                        </div>
+                    ` : '<p class="empty-state">No expenses found</p>'}
                 </div>
             </div>
         </div>
     `;
     
-    // Initialize charts after a short delay to ensure canvas is in DOM
+    // Initialize charts
     setTimeout(initCharts, 0);
 }
 
@@ -387,12 +403,25 @@ function setupEventListeners() {
     });
 
     // Bottom Sheet: Add Transaction
-    elements.addBtn.addEventListener('click', () => {
+    const triggerAddSheet = () => {
         elements.transactionForm.reset();
         document.getElementById('edit-id').value = '';
         document.getElementById('selected-category-text').textContent = 'Select Category...';
         document.getElementById('category').value = '';
         openSheet('sheet-transaction-form', 'Add Transaction');
+    };
+    
+    if (elements.fabAdd) elements.fabAdd.addEventListener('click', triggerAddSheet);
+    if (elements.addBtnDesktop) elements.addBtnDesktop.addEventListener('click', triggerAddSheet);
+
+    // Quick Amounts
+    document.querySelectorAll('.quick-amount-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const val = parseFloat(btn.dataset.val);
+            const amountInput = document.getElementById('amount');
+            const currentVal = parseFloat(amountInput.value) || 0;
+            amountInput.value = currentVal + val;
+        });
     });
 
     // Category Selector Logic
@@ -589,78 +618,86 @@ function formatCurrency(amount) {
 function initCharts() {
     const pieCtx = document.getElementById('categoryChart')?.getContext('2d');
     const lineCtx = document.getElementById('trendChart')?.getContext('2d');
+    const ieCtx = document.getElementById('incomeExpenseChart')?.getContext('2d');
 
-    if (!pieCtx || !lineCtx) return;
+    // Destroy existing charts to prevent memory leaks if re-rendering
+    if (state.charts.pie) state.charts.pie.destroy();
+    if (state.charts.line) state.charts.line.destroy();
+    if (state.charts.ie) state.charts.ie.destroy();
 
-    // Prepare data for Pie Chart
-    const expenses = state.transactions.filter(t => t.type === 'expense');
-    const categories = {};
-    expenses.forEach(t => {
-        categories[t.category] = (categories[t.category] || 0) + t.amount;
-    });
+    const textColor = getComputedStyle(document.body).getPropertyValue('--text-color');
 
-    const pieLabels = Object.keys(categories);
-    const pieData = Object.values(categories);
+    if (pieCtx && lineCtx && ieCtx) {
+        // Prepare data for Pie Chart
+        const expenses = state.transactions.filter(t => t.type === 'expense');
+        const categories = {};
+        expenses.forEach(t => {
+            categories[t.category] = (categories[t.category] || 0) + t.amount;
+        });
 
-    // Prepare data for Line Chart (Trend - last 7 days with activity)
-    const dailyExpenses = {};
-    expenses.forEach(t => {
-        const date = t.date;
-        dailyExpenses[date] = (dailyExpenses[date] || 0) + t.amount;
-    });
+        const pieLabels = Object.keys(categories);
+        const pieData = Object.values(categories);
 
-    const sortedDates = Object.keys(dailyExpenses).sort();
-    const lineLabels = sortedDates.slice(-7).map(d => formatDate(d));
-    const lineData = sortedDates.slice(-7).map(d => dailyExpenses[d]);
+        // Prepare data for Line Chart (Trend - last 7 days with activity)
+        const dailyExpenses = {};
+        expenses.forEach(t => {
+            const date = t.date;
+            dailyExpenses[date] = (dailyExpenses[date] || 0) + t.amount;
+        });
 
-    // Pie Chart
-    state.charts.pie = new Chart(pieCtx, {
-        type: 'doughnut',
-        data: {
-            labels: pieLabels,
-            datasets: [{
-                data: pieData,
-                backgroundColor: [
-                    '#f59e0b', '#6366f1', '#ec4899', '#8b5cf6', '#10b981', '#64748b'
-                ],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { color: getComputedStyle(document.body).getPropertyValue('--text-color') } }
-            }
-        }
-    });
+        const sortedDates = Object.keys(dailyExpenses).sort();
+        const lineLabels = sortedDates.slice(-7).map(d => formatDate(d));
+        const lineData = sortedDates.slice(-7).map(d => dailyExpenses[d]);
 
-    // Line Chart
-    state.charts.line = new Chart(lineCtx, {
-        type: 'line',
-        data: {
-            labels: lineLabels,
-            datasets: [{
-                label: 'Expenses',
-                data: lineData,
-                borderColor: '#6366f1',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                fill: true,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
+        // Income vs Expense
+        const { totalIncome, totalExpenses } = calculateTotals();
+
+        // Pie Chart
+        state.charts.pie = new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: pieLabels,
+                datasets: [{
+                    data: pieData,
+                    backgroundColor: ['#f59e0b', '#6366f1', '#ec4899', '#8b5cf6', '#10b981', '#64748b'],
+                    borderWidth: 0
+                }]
             },
-            scales: {
-                y: { display: false },
-                x: { ticks: { color: getComputedStyle(document.body).getPropertyValue('--text-color') } }
-            }
-        }
-    });
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor } } } }
+        });
+
+        // Line Chart
+        state.charts.line = new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: lineLabels,
+                datasets: [{
+                    label: 'Expenses',
+                    data: lineData,
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { ticks: { color: textColor } } } }
+        });
+
+        // Income vs Expense Bar Chart
+        state.charts.ie = new Chart(ieCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Income', 'Expense'],
+                datasets: [{
+                    data: [totalIncome, totalExpenses],
+                    backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(239, 68, 68, 0.8)'],
+                    borderRadius: 10,
+                    barThickness: 50
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { ticks: { color: textColor } } } }
+        });
+    }
 }
 
 function updateBudget() {
