@@ -12,8 +12,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="light-mode">
     <div class="app-container">
@@ -35,9 +33,9 @@
                         <i class="fas fa-list"></i>
                         <span>Transactions</span>
                     </li>
-                    <li class="nav-item" data-view="analytics">
-                        <i class="fas fa-chart-pie"></i>
-                        <span>Analytics</span>
+                    <li class="nav-item" data-view="history">
+                        <i class="fas fa-history"></i>
+                        <span>History</span>
                     </li>
                     <li class="nav-item" data-view="settings">
                         <i class="fas fa-cog"></i>
@@ -81,8 +79,8 @@
                 <!-- Transactions content will be injected here -->
             </div>
 
-            <div id="analytics-view" class="view-section">
-                <!-- Analytics content will be injected here -->
+            <div id="history-view" class="view-section">
+                <!-- History content will be injected here -->
             </div>
 
             <div id="settings-view" class="view-section">
@@ -108,56 +106,51 @@
         <div class="sheet-content-container">
             
             <!-- Transaction Form View -->
-            <div id="sheet-transaction-form" class="sheet-view active">
-                <form id="transaction-form">
+            <div id="sheet-transaction-form" class="sheet-view active full-screen-form">
+                <form id="transaction-form" class="flex-form">
                     <input type="hidden" id="edit-id">
-                    <div class="form-group">
-                        <label for="amount">Amount</label>
-                        <input type="number" id="amount" step="0.01" placeholder="0.00" required>
-                        <div class="quick-amounts">
-                            <button type="button" class="quick-amount-btn" data-val="100">+100</button>
-                            <button type="button" class="quick-amount-btn" data-val="500">+500</button>
-                            <button type="button" class="quick-amount-btn" data-val="1000">+1000</button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Category</label>
-                        <div class="custom-select-trigger" id="category-trigger">
-                            <span id="selected-category-text">Select Category...</span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <input type="hidden" id="category" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="date">Date</label>
-                        <input type="date" id="date" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="type">Type</label>
-                        <select id="type" required>
+                    
+                    <div class="amount-header">
+                        <select id="type" class="type-selector">
                             <option value="expense">Expense</option>
                             <option value="income">Income</option>
                         </select>
+                        <div class="massive-amount-input">
+                            <span class="currency-symbol">₹</span>
+                            <input type="number" id="amount" step="0.01" placeholder="0" required>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="description">Description</label>
-                        <input type="text" id="description" placeholder="Lunch at Cafe..." required>
-                    </div>
-                    <button type="submit" class="btn btn-primary full-width">Save Transaction</button>
-                </form>
-            </div>
 
-            <!-- Category Selection View -->
-            <div id="sheet-category-selection" class="sheet-view">
-                <div class="category-list">
-                    <div class="category-item" data-value="Food"><i class="fas fa-utensils"></i> Food & Dining</div>
-                    <div class="category-item" data-value="Transport"><i class="fas fa-car"></i> Transportation</div>
-                    <div class="category-item" data-value="Shopping"><i class="fas fa-shopping-bag"></i> Shopping</div>
-                    <div class="category-item" data-value="Entertainment"><i class="fas fa-film"></i> Entertainment</div>
-                    <div class="category-item" data-value="Health"><i class="fas fa-heartbeat"></i> Health & Wellness</div>
-                    <div class="category-item" data-value="Income"><i class="fas fa-money-bill-wave"></i> Salary/Income</div>
-                    <div class="category-item" data-value="Other"><i class="fas fa-box"></i> Other</div>
-                </div>
+                    <div class="form-body">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <div class="category-grid" id="category-grid-selection">
+                                <div class="cat-grid-item" data-value="Food"><i class="fas fa-utensils"></i><span>Food</span></div>
+                                <div class="cat-grid-item" data-value="Transport"><i class="fas fa-car"></i><span>Transport</span></div>
+                                <div class="cat-grid-item" data-value="Shopping"><i class="fas fa-shopping-bag"></i><span>Shopping</span></div>
+                                <div class="cat-grid-item" data-value="Entertainment"><i class="fas fa-film"></i><span>Fun</span></div>
+                                <div class="cat-grid-item" data-value="Health"><i class="fas fa-heartbeat"></i><span>Health</span></div>
+                                <div class="cat-grid-item" data-value="Income"><i class="fas fa-money-bill-wave"></i><span>Income</span></div>
+                                <div class="cat-grid-item" data-value="Other"><i class="fas fa-box"></i><span>Other</span></div>
+                            </div>
+                            <input type="hidden" id="category" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="date">Date</label>
+                            <input type="date" id="date" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description">Notes</label>
+                            <input type="text" id="description" placeholder="What was this for?" required>
+                        </div>
+                    </div>
+
+                    <div class="fixed-bottom-action">
+                        <button type="submit" class="btn btn-primary full-width massive-btn">Save</button>
+                    </div>
+                </form>
             </div>
 
             <!-- Filter View -->
