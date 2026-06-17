@@ -526,7 +526,11 @@ function handleCalcKeyPress(val) {
         const tokens = calcState.expr.split(/[+\-]/);
         const currentToken = tokens[tokens.length - 1];
         if (!currentToken.includes('.')) {
-            calcState.expr += '.';
+            if (currentToken === '') {
+                calcState.expr += '0.';
+            } else {
+                calcState.expr += '.';
+            }
         }
     } else {
         if (calcState.expr === '0' && val === '0') return;
