@@ -252,20 +252,20 @@ function renderDashboard() {
 
     elements.dashboardView.innerHTML = `
         <div class="dashboard-grid">
-            <div class="card glass stat-card highlight" style="flex-direction: column; align-items: flex-start; padding: 2rem;">
+            <div class="card stat-card highlight" style="flex-direction: column; align-items: flex-start; padding: 2rem;">
                 <p class="stat-label" style="font-size: 1rem;">Total Balance</p>
                 <h3 class="stat-value" style="font-size: 2.5rem; margin-top: 0.5rem;">${formatCurrency(totalBalance)}</h3>
             </div>
             
             <div class="stats-cards" style="grid-template-columns: 1fr 1fr;">
-                <div class="card glass stat-card" style="padding: 1.5rem;">
+                <div class="card stat-card" style="padding: 1.5rem;">
                     <div class="stat-icon income"><i class="fas fa-arrow-up"></i></div>
                     <div class="stat-info">
                         <p class="stat-label">This Month Income</p>
                         <h3 class="stat-value" style="font-size: 1.25rem;">${formatCurrency(cmData.income)}</h3>
                     </div>
                 </div>
-                <div class="card glass stat-card" style="padding: 1.5rem;">
+                <div class="card stat-card" style="padding: 1.5rem;">
                     <div class="stat-icon expense"><i class="fas fa-arrow-down"></i></div>
                     <div class="stat-info">
                         <p class="stat-label">This Month Expense</p>
@@ -274,7 +274,7 @@ function renderDashboard() {
                 </div>
             </div>
 
-            <div class="card glass stat-card" style="padding: 1.5rem;">
+            <div class="card stat-card" style="padding: 1.5rem;">
                 <div class="stat-icon balance"><i class="fas fa-piggy-bank"></i></div>
                 <div class="stat-info">
                     <p class="stat-label">This Month Savings</p>
@@ -282,7 +282,7 @@ function renderDashboard() {
                 </div>
             </div>
 
-            <div class="card glass recent-transactions-card">
+            <div class="card recent-transactions-card">
                 <div class="card-header">
                     <h3>Recent Transactions</h3>
                     <button class="btn-text" onclick="switchView('transactions')">View All</button>
@@ -314,7 +314,7 @@ function renderTransactionItem(t) {
 
 function renderTransactions() {
     elements.transactionsView.innerHTML = `
-        <div class="card glass transactions-table-card">
+        <div class="card transactions-table-card">
             <div class="table-controls">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
@@ -369,7 +369,7 @@ window.viewMonthDetails = function(mk) {
     
     // Quick hack: Render transactions view filtered by this month
     elements.historyView.innerHTML = `
-        <div class="card glass">
+        <div class="card">
             <div class="card-header" style="margin-bottom: 1rem;">
                 <h3>${formatMonthKey(mk)}</h3>
                 <button class="btn-text" onclick="renderHistory()"><i class="fas fa-arrow-left"></i> Back</button>
@@ -393,7 +393,7 @@ window.viewMonthDetails = function(mk) {
 
 function renderSettings() {
     elements.settingsView.innerHTML = `
-        <div class="card glass settings-card">
+        <div class="card settings-card">
             <div class="settings-group">
                 <h3>Theme Settings</h3>
                 <p class="settings-desc">Choose between light and dark visual themes.</p>
