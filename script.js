@@ -35,13 +35,88 @@ const elements = {
     viewSections: document.querySelectorAll('.view-section'),
     viewTitle: document.getElementById('view-title'),
     addBtn: document.getElementById('add-transaction-btn'),
-    modal: document.getElementById('transaction-modal'),
-    closeModal: document.querySelector('.close-modal'),
     transactionForm: document.getElementById('transaction-form'),
     dashboardView: document.getElementById('dashboard-view'),
     transactionsView: document.getElementById('transactions-view'),
     settingsView: document.getElementById('settings-view')
 };
+
+// --- Bottom Sheet Logic ---
+const sheetOverlay = document.getElementById('sheet-overlay');
+const bottomSheet = document.getElementById('bottom-sheet');
+const sheetDragHandle = document.querySelector('.sheet-drag-handle');
+const sheetViews = document.querySelectorAll('.sheet-view');
+const sheetTitle = document.getElementById('sheet-title');
+const closeSheetBtn = document.querySelector('.close-sheet');
+
+let startY = 0;
+let currentY = 0;
+let isDragging = false;
+let sheetHeight = 0;
+
+function openSheet(viewId, title) {
+    sheetViews.forEach(view => view.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+    if(title) sheetTitle.textContent = title;
+    
+    sheetOverlay.classList.add('active');
+    bottomSheet.classList.add('active');
+    bottomSheet.style.transform = '';
+}
+
+function closeSheet() {
+    sheetOverlay.classList.remove('active');
+    bottomSheet.classList.remove('active');
+    bottomSheet.style.transform = '';
+}
+
+// Touch Gestures for Bottom Sheet
+function handleTouchStart(e) {
+    startY = e.touches[0].clientY;
+    isDragging = true;
+    bottomSheet.classList.add('dragging');
+    sheetHeight = bottomSheet.getBoundingClientRect().height;
+}
+
+function handleTouchMove(e) {
+    if (!isDragging) return;
+    currentY = e.touches[0].clientY;
+    const deltaY = currentY - startY;
+    
+    // Only allow dragging down
+    if (deltaY > 0) {
+        bottomSheet.style.transform = `translateY(${deltaY}px)`;
+    } else {
+        // Resistance when dragging up past 100%
+        bottomSheet.style.transform = `translateY(${deltaY * 0.1}px)`;
+    }
+}
+
+function handleTouchEnd(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    bottomSheet.classList.remove('dragging');
+    
+    if (!currentY) {
+        bottomSheet.style.transform = '';
+        return;
+    }
+
+    const deltaY = currentY - startY;
+    if (deltaY > sheetHeight * 0.2 || deltaY > 100) {
+        closeSheet();
+    } else {
+        bottomSheet.style.transform = '';
+    }
+    currentY = 0;
+}
+
+sheetDragHandle.addEventListener('touchstart', handleTouchStart);
+sheetDragHandle.addEventListener('touchmove', handleTouchMove, { passive: false });
+sheetDragHandle.addEventListener('touchend', handleTouchEnd);
+sheetOverlay.addEventListener('click', closeSheet);
+closeSheetBtn.addEventListener('click', closeSheet);
+
 
 // --- Initialization ---
 function init() {
@@ -311,20 +386,33 @@ function setupEventListeners() {
         item.addEventListener('click', () => switchView(item.dataset.view));
     });
 
-    // Modal
+    // Bottom Sheet: Add Transaction
     elements.addBtn.addEventListener('click', () => {
         elements.transactionForm.reset();
         document.getElementById('edit-id').value = '';
-        document.getElementById('modal-title').textContent = 'Add Transaction';
-        elements.modal.classList.add('active');
+        document.getElementById('selected-category-text').textContent = 'Select Category...';
+        document.getElementById('category').value = '';
+        openSheet('sheet-transaction-form', 'Add Transaction');
     });
 
-    elements.closeModal.addEventListener('click', () => {
-        elements.modal.classList.remove('active');
+    // Category Selector Logic
+    const categoryTrigger = document.getElementById('category-trigger');
+    const categoryInput = document.getElementById('category');
+    const categoryText = document.getElementById('selected-category-text');
+    const categoryItems = document.querySelectorAll('.category-item');
+
+    categoryTrigger.addEventListener('click', () => {
+        openSheet('sheet-category-selection', 'Select Category');
     });
 
-    window.addEventListener('click', (e) => {
-        if (e.target === elements.modal) elements.modal.classList.remove('active');
+    categoryItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const val = item.dataset.value;
+            const text = item.textContent.trim();
+            categoryInput.value = val;
+            categoryText.textContent = text;
+            openSheet('sheet-transaction-form', document.getElementById('edit-id').value ? 'Edit Transaction' : 'Add Transaction');
+        });
     });
 
     // Form Submission
@@ -359,7 +447,7 @@ function handleFormSubmit(e) {
     }
 
     saveTransactions();
-    elements.modal.classList.remove('active');
+    closeSheet();
     renderCurrentView();
 }
 
@@ -380,8 +468,8 @@ function editTransaction(id) {
     document.getElementById('type').value = t.type;
     document.getElementById('description').value = t.description;
     
-    document.getElementById('modal-title').textContent = 'Edit Transaction';
-    elements.modal.classList.add('active');
+    document.getElementById('selected-category-text').textContent = t.category;
+    openSheet('sheet-transaction-form', 'Edit Transaction');
 }
 
 function handleFilterSort() {

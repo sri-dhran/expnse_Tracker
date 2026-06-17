@@ -82,48 +82,99 @@
         </main>
     </div>
 
-    <!-- Transaction Modal -->
-    <div id="transaction-modal" class="modal">
-        <div class="modal-content glass">
-            <div class="modal-header">
-                <h2 id="modal-title">Add Transaction</h2>
-                <button class="close-modal">&times;</button>
+    <!-- Bottom Sheet Architecture -->
+    <div id="sheet-overlay" class="sheet-overlay"></div>
+
+    <div id="bottom-sheet" class="bottom-sheet">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+            <h2 id="sheet-title">Add Transaction</h2>
+            <button class="close-sheet">&times;</button>
+        </div>
+        <div class="sheet-content-container">
+            
+            <!-- Transaction Form View -->
+            <div id="sheet-transaction-form" class="sheet-view active">
+                <form id="transaction-form">
+                    <input type="hidden" id="edit-id">
+                    <div class="form-group">
+                        <label for="amount">Amount</label>
+                        <input type="number" id="amount" step="0.01" placeholder="0.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <div class="custom-select-trigger" id="category-trigger">
+                            <span id="selected-category-text">Select Category...</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <input type="hidden" id="category" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="type">Type</label>
+                        <select id="type" required>
+                            <option value="expense">Expense</option>
+                            <option value="income">Income</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <input type="text" id="description" placeholder="Lunch at Cafe..." required>
+                    </div>
+                    <button type="submit" class="btn btn-primary full-width">Save Transaction</button>
+                </form>
             </div>
-            <form id="transaction-form">
-                <input type="hidden" id="edit-id">
-                <div class="form-group">
-                    <label for="amount">Amount</label>
-                    <input type="number" id="amount" step="0.01" placeholder="0.00" required>
+
+            <!-- Category Selection View -->
+            <div id="sheet-category-selection" class="sheet-view">
+                <div class="category-list">
+                    <div class="category-item" data-value="Food"><i class="fas fa-utensils"></i> Food & Dining</div>
+                    <div class="category-item" data-value="Transport"><i class="fas fa-car"></i> Transportation</div>
+                    <div class="category-item" data-value="Shopping"><i class="fas fa-shopping-bag"></i> Shopping</div>
+                    <div class="category-item" data-value="Entertainment"><i class="fas fa-film"></i> Entertainment</div>
+                    <div class="category-item" data-value="Health"><i class="fas fa-heartbeat"></i> Health & Wellness</div>
+                    <div class="category-item" data-value="Income"><i class="fas fa-money-bill-wave"></i> Salary/Income</div>
+                    <div class="category-item" data-value="Other"><i class="fas fa-box"></i> Other</div>
                 </div>
+            </div>
+
+            <!-- Filter View -->
+            <div id="sheet-filter-selection" class="sheet-view">
+                <!-- Filters moved here in script.js, or duplicate the UI here -->
                 <div class="form-group">
-                    <label for="category">Category</label>
-                    <select id="category" required>
-                        <option value="Food">Food & Dining</option>
-                        <option value="Transport">Transportation</option>
-                        <option value="Shopping">Shopping</option>
-                        <option value="Entertainment">Entertainment</option>
-                        <option value="Health">Health & Wellness</option>
-                        <option value="Income">Salary/Income</option>
-                        <option value="Other">Other</option>
+                    <label>Sort By</label>
+                    <select id="sheet-sort-order">
+                        <option value="latest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="highest">Highest Amount</option>
+                        <option value="lowest">Lowest Amount</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="date">Date</label>
-                    <input type="date" id="date" required>
+                    <label>From Date</label>
+                    <input type="date" id="sheet-filter-date-from">
                 </div>
                 <div class="form-group">
-                    <label for="type">Type</label>
-                    <select id="type" required>
-                        <option value="expense">Expense</option>
-                        <option value="income">Income</option>
-                    </select>
+                    <label>To Date</label>
+                    <input type="date" id="sheet-filter-date-to">
                 </div>
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <input type="text" id="description" placeholder="Lunch at Cafe..." required>
+                <button id="apply-filters-btn" class="btn btn-primary full-width">Apply Filters</button>
+            </div>
+
+            <!-- Transaction Details View -->
+            <div id="sheet-transaction-details" class="sheet-view">
+                <div id="details-content" style="text-align: center; padding: 2rem 0;">
+                    <!-- Details injected via JS -->
                 </div>
-                <button type="submit" class="btn btn-primary full-width">Save Transaction</button>
-            </form>
+                <div class="action-btns" style="justify-content: center; margin-top: 1rem;">
+                    <button id="details-edit-btn" class="btn btn-primary">Edit</button>
+                    <button id="details-delete-btn" class="btn btn-danger">Delete</button>
+                </div>
+            </div>
+
         </div>
     </div>
 
