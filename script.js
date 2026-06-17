@@ -77,12 +77,25 @@ if (state.transactions.length === 0) {
     const cmk = getCurrentMonthKey();
     const pmk = getMonthKey(new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString());
     state.transactions = [
+        // Current Month
         { id: '1', amount: 50000, category: 'Income', date: `${cmk}-01`, type: 'income', description: 'Monthly Salary' },
         { id: '2', amount: 1500, category: 'Food', date: `${cmk}-05`, type: 'expense', description: 'Dinner at Italian Place' },
         { id: '3', amount: 4500, category: 'Shopping', date: `${cmk}-10`, type: 'expense', description: 'New Sneakers' },
         { id: '4', amount: 800, category: 'Transport', date: `${cmk}-12`, type: 'expense', description: 'Uber Ride' },
         { id: '5', amount: 2000, category: 'Entertainment', date: `${cmk}-15`, type: 'expense', description: 'Movie Night & Popcorn' },
-        { id: '6', amount: 12000, category: 'Shopping', date: `${pmk}-10`, type: 'expense', description: 'Past Month Shopping' }
+        
+        // Previous Month
+        { id: '6', amount: 12000, category: 'Shopping', date: `${pmk}-10`, type: 'expense', description: 'Past Month Shopping' },
+        
+        // Last Year (2025)
+        { id: '7', amount: 45000, category: 'Income', date: `2025-11-01`, type: 'income', description: 'November Salary' },
+        { id: '8', amount: 3000, category: 'Health', date: `2025-11-15`, type: 'expense', description: 'Pharmacy' },
+        { id: '9', amount: 55000, category: 'Income', date: `2025-12-01`, type: 'income', description: 'December Salary & Bonus' },
+        { id: '10', amount: 15000, category: 'Shopping', date: `2025-12-24`, type: 'expense', description: 'Holiday Gifts' },
+        
+        // 2 Years Ago (2024)
+        { id: '11', amount: 40000, category: 'Income', date: `2024-06-01`, type: 'income', description: 'Old Job Salary' },
+        { id: '12', amount: 8000, category: 'Transport', date: `2024-06-15`, type: 'expense', description: 'Car Repairs' }
     ];
     StorageService.saveTransactions(state.transactions);
 }
