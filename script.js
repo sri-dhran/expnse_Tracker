@@ -3,13 +3,19 @@
  * Core Logic & State Management
  */
 
-// Storage Adapter to make it future-ready
+// Storage Adapter — namespaced per logged-in user
+const _user = (typeof getCurrentUser === 'function') ? getCurrentUser() : 'default';
+
 const StorageService = {
-    getTransactions: () => JSON.parse(localStorage.getItem('transactions')) || [],
-    saveTransactions: (txs) => localStorage.setItem('transactions', JSON.stringify(txs)),
-    getSettings: () => JSON.parse(localStorage.getItem('settings')) || { budget: 15000, theme: 'light' },
-    saveSettings: (settings) => localStorage.setItem('settings', JSON.stringify(settings)),
-    clearAll: () => localStorage.clear()
+    getTransactions: () => JSON.parse(localStorage.getItem(`txs_${_user}`)) || [],
+    saveTransactions: (txs) => localStorage.setItem(`txs_${_user}`, JSON.stringify(txs)),
+    getSettings: () => JSON.parse(localStorage.getItem(`settings_${_user}`)) || { budget: 15000, theme: 'light' },
+    saveSettings: (s) => localStorage.setItem(`settings_${_user}`, JSON.stringify(s)),
+    clearAll: () => {
+        localStorage.removeItem(`txs_${_user}`);
+        localStorage.removeItem(`settings_${_user}`);
+        location.reload();
+    }
 };
 
 // App State
@@ -412,8 +418,19 @@ window.viewMonthDetails = function(mk) {
 };
 
 function renderSettings() {
+    const username = (typeof getCurrentUser === 'function') ? getCurrentUser() : 'User';
     elements.settingsView.innerHTML = `
         <div class="card settings-card">
+            <div class="settings-group">
+                <div class="settings-user-badge">
+                    <div class="settings-avatar">${username.charAt(0).toUpperCase()}</div>
+                    <div>
+                        <p class="settings-username">@${username}</p>
+                        <p class="settings-account-label">Your account</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="settings-group">
                 <h3>Theme Settings</h3>
                 <p class="settings-desc">Choose between light and dark visual themes.</p>
@@ -425,10 +442,19 @@ function renderSettings() {
 
             <div class="settings-group danger-zone">
                 <h3>Danger Zone</h3>
-                <p class="settings-desc">Permanently delete all transaction data.</p>
+                <p class="settings-desc">Permanently delete all your transaction data.</p>
                 <button class="btn btn-danger" onclick="clearAllData()">
                     <i class="fas fa-trash-alt"></i>
-                    <span>Clear All Data</span>
+                    <span>Clear My Data</span>
+                </button>
+            </div>
+
+            <div class="settings-group">
+                <h3>Account</h3>
+                <p class="settings-desc">Sign out and return to the login screen.</p>
+                <button class="btn btn-secondary" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sign Out</span>
                 </button>
             </div>
         </div>

@@ -14,7 +14,74 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="light-mode">
-    <div class="app-container">
+    <!-- ── Auth Screen ────────────────────────────────── -->
+    <div id="auth-screen" style="display:none;">
+        <!-- Login View -->
+        <div id="auth-login-view" class="auth-view active">
+            <div class="auth-card">
+                <div class="auth-logo">
+                    <i class="fas fa-wallet"></i>
+                    <span>Expenxe</span>
+                </div>
+                <h2 class="auth-title">Welcome back</h2>
+                <p class="auth-sub">Sign in to your account</p>
+
+                <form id="login-form" class="auth-form" autocomplete="on">
+                    <div class="auth-field">
+                        <i class="fas fa-user"></i>
+                        <input id="login-username" type="text" placeholder="Username" autocomplete="username" required>
+                    </div>
+                    <div class="auth-field">
+                        <i class="fas fa-lock"></i>
+                        <input id="login-password" type="password" placeholder="Password" autocomplete="current-password" required>
+                    </div>
+                    <p id="login-error" class="auth-error" style="display:none;"></p>
+                    <button id="login-submit" type="submit" class="auth-btn">
+                        <span class="btn-label">Sign In</span>
+                        <span class="btn-loader" style="display:none;"><i class="fas fa-spinner fa-spin"></i></span>
+                    </button>
+                </form>
+
+                <p class="auth-switch">No account? <a id="goto-signup" href="#">Create one</a></p>
+            </div>
+        </div>
+
+        <!-- Signup View -->
+        <div id="auth-signup-view" class="auth-view">
+            <div class="auth-card">
+                <div class="auth-logo">
+                    <i class="fas fa-wallet"></i>
+                    <span>Expenxe</span>
+                </div>
+                <h2 class="auth-title">Create account</h2>
+                <p class="auth-sub">Your data stays private on this device</p>
+
+                <form id="signup-form" class="auth-form" autocomplete="off">
+                    <div class="auth-field">
+                        <i class="fas fa-user"></i>
+                        <input id="signup-username" type="text" placeholder="Username" autocomplete="username" required>
+                    </div>
+                    <div class="auth-field">
+                        <i class="fas fa-lock"></i>
+                        <input id="signup-password" type="password" placeholder="Password" autocomplete="new-password" required>
+                    </div>
+                    <div class="auth-field">
+                        <i class="fas fa-lock"></i>
+                        <input id="signup-confirm" type="password" placeholder="Confirm password" autocomplete="new-password" required>
+                    </div>
+                    <p id="signup-error" class="auth-error" style="display:none;"></p>
+                    <button id="signup-submit" type="submit" class="auth-btn">
+                        <span class="btn-label">Create Account</span>
+                        <span class="btn-loader" style="display:none;"><i class="fas fa-spinner fa-spin"></i></span>
+                    </button>
+                </form>
+
+                <p class="auth-switch">Already have an account? <a id="goto-login" href="#">Sign in</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container" style="display:none;">
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -256,6 +323,7 @@
         </div>
     </div>
 
+    <script src="auth.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
