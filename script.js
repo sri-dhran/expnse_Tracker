@@ -502,8 +502,10 @@ function updateCalcDisplay() {
         if (hasOperator) {
             const result = evaluateExpression(calcState.expr);
             previewVal.textContent = `= ₹ ${new Intl.NumberFormat('en-IN').format(result)}`;
+            previewVal.style.visibility = 'visible';
         } else {
-            previewVal.textContent = '';
+            previewVal.innerHTML = '&nbsp;';
+            previewVal.style.visibility = 'hidden';
         }
     }
 }
