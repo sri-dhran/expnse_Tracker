@@ -233,10 +233,13 @@ function switchView(viewName) {
 
 function renderCurrentView() {
     calculateMonthlyData();
+    activeSwipedId = null;
     if (state.currentView === 'dashboard') renderDashboard();
     else if (state.currentView === 'transactions') renderTransactions();
     else if (state.currentView === 'history') renderHistory();
     else if (state.currentView === 'settings') renderSettings();
+    // Attach swipe gesture listeners after DOM update
+    requestAnimationFrame(() => attachSwipeListeners());
 }
 
 // --- View Rendering ---
@@ -300,16 +303,29 @@ function renderDashboard() {
 
 function renderTransactionItem(t) {
     return `
-        <div class="transaction-item" onclick="editTransaction('${t.id}')">
-            <div class="t-icon category-${t.category.toLowerCase()}">
-                <i class="${getCategoryIcon(t.category)}"></i>
+        <div class="t-swipe-wrapper" id="t-wrap-${t.id}">
+            <div class="t-actions-tray">
+                <button class="t-action-btn t-edit-btn" onclick="event.stopPropagation(); editTransaction('${t.id}')">
+                    <i class="fas fa-pen"></i>
+                    <span>Edit</span>
+                </button>
+                <button class="t-action-btn t-delete-btn" onclick="event.stopPropagation(); deleteTransaction('${t.id}')">
+                    <i class="fas fa-trash"></i>
+                    <span>Delete</span>
+                </button>
             </div>
-            <div class="t-details">
-                <p class="t-desc">${t.description}</p>
-                <p class="t-meta">${t.category} • ${formatDate(t.date)}</p>
-            </div>
-            <div class="t-amount ${t.type}">
-                ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+            <div class="transaction-item" id="t-item-${t.id}" onclick="handleTransactionTap('${t.id}')">
+                <div class="t-icon category-${t.category.toLowerCase()}">
+                    <i class="${getCategoryIcon(t.category)}"></i>
+                </div>
+                <div class="t-details">
+                    <p class="t-desc">${t.description}</p>
+                    <p class="t-meta">${t.category} • ${formatDate(t.date)}</p>
+                </div>
+                <div class="t-amount ${t.type}">
+                    ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+                </div>
+                <div class="t-chevron"><i class="fas fa-chevron-left"></i></div>
             </div>
         </div>
     `;
@@ -392,6 +408,7 @@ window.viewMonthDetails = function(mk) {
             </div>
         </div>
     `;
+    requestAnimationFrame(() => attachSwipeListeners());
 };
 
 function renderSettings() {
@@ -751,6 +768,9 @@ window.editTransaction = function(id) {
     const t = state.transactions.find(tx => tx.id === id);
     if (!t) return;
 
+    // Dismiss any open swipe tray
+    dismissAllSwipedItems();
+
     document.getElementById('edit-id').value = t.id;
     document.getElementById('amount').value = t.amount;
     document.getElementById('date').value = t.date;
@@ -765,6 +785,126 @@ window.editTransaction = function(id) {
 
     openSheet('sheet-transaction-form');
 };
+
+// --- Delete Transaction ---
+window.deleteTransaction = function(id) {
+    const t = state.transactions.find(tx => tx.id === id);
+    if (!t) return;
+
+    // Animate the item out, then delete
+    const wrapper = document.getElementById(`t-wrap-${id}`);
+    if (wrapper) {
+        wrapper.style.transition = 'max-height 0.35s ease, opacity 0.3s ease, margin 0.3s ease';
+        wrapper.style.opacity = '0';
+        wrapper.style.maxHeight = '0';
+        wrapper.style.marginBottom = '0';
+        setTimeout(() => {
+            state.transactions = state.transactions.filter(tx => tx.id !== id);
+            StorageService.saveTransactions(state.transactions);
+            renderCurrentView();
+        }, 350);
+    } else {
+        state.transactions = state.transactions.filter(tx => tx.id !== id);
+        StorageService.saveTransactions(state.transactions);
+        renderCurrentView();
+    }
+};
+
+// --- Swipe-to-reveal Gesture Logic ---
+let activeSwipedId = null;
+const SWIPE_THRESHOLD = 60;
+const TRAY_WIDTH = 150;
+
+function dismissAllSwipedItems() {
+    if (activeSwipedId) {
+        const item = document.getElementById(`t-item-${activeSwipedId}`);
+        if (item) {
+            item.style.transform = 'translateX(0)';
+            item.style.boxShadow = '';
+        }
+        activeSwipedId = null;
+    }
+}
+
+// Called when a transaction row is tapped
+window.handleTransactionTap = function(id) {
+    if (activeSwipedId === id) {
+        // Second tap on open item → close tray
+        dismissAllSwipedItems();
+    } else if (activeSwipedId) {
+        // Tapping a different item → close current, don't open editor
+        dismissAllSwipedItems();
+    } else {
+        // No tray open → open editor immediately
+        editTransaction(id);
+    }
+};
+
+// Attach swipe listeners after DOM renders
+function attachSwipeListeners() {
+    document.querySelectorAll('.t-swipe-wrapper').forEach(wrapper => {
+        const itemEl = wrapper.querySelector('.transaction-item');
+        if (!itemEl) return;
+        const id = itemEl.id.replace('t-item-', '');
+
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isSwiping = false;
+
+        itemEl.addEventListener('touchstart', e => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            isSwiping = false;
+        }, { passive: true });
+
+        itemEl.addEventListener('touchmove', e => {
+            const dx = e.touches[0].clientX - touchStartX;
+            const dy = e.touches[0].clientY - touchStartY;
+
+            // Only hijack if it's more horizontal than vertical
+            if (!isSwiping && Math.abs(dx) < Math.abs(dy)) return;
+            isSwiping = true;
+
+            if (dx < 0) {
+                // Swiping left — close any other open item first
+                if (activeSwipedId && activeSwipedId !== id) {
+                    dismissAllSwipedItems();
+                }
+                const clamp = Math.max(dx, -TRAY_WIDTH);
+                itemEl.style.transition = 'none';
+                itemEl.style.transform = `translateX(${clamp}px)`;
+            } else if (dx > 0 && activeSwipedId === id) {
+                // Swiping right to close
+                const clamp = Math.min(dx - TRAY_WIDTH, 0);
+                itemEl.style.transition = 'none';
+                itemEl.style.transform = `translateX(${clamp}px)`;
+            }
+        }, { passive: true });
+
+        itemEl.addEventListener('touchend', e => {
+            if (!isSwiping) return;
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            itemEl.style.transition = 'transform 0.25s cubic-bezier(0.4,0,0.2,1)';
+
+            if (dx < -SWIPE_THRESHOLD) {
+                // Reveal tray
+                itemEl.style.transform = `translateX(-${TRAY_WIDTH}px)`;
+                activeSwipedId = id;
+            } else {
+                // Snap back
+                itemEl.style.transform = 'translateX(0)';
+                if (activeSwipedId === id) activeSwipedId = null;
+            }
+        }, { passive: true });
+    });
+
+    // Dismiss on outside tap
+    document.addEventListener('touchstart', e => {
+        if (activeSwipedId && !e.target.closest(`#t-wrap-${activeSwipedId}`)) {
+            dismissAllSwipedItems();
+        }
+    }, { passive: true });
+}
 
 // Start the app
 init();
