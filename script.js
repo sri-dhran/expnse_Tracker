@@ -200,12 +200,15 @@ function init() {
 
 // --- Theme Management ---
 function applyTheme() {
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (state.settings.theme === 'dark') {
         document.body.classList.add('dark-mode');
         document.body.classList.remove('light-mode');
+        if (metaThemeColor) metaThemeColor.setAttribute('content', '#2d3238');
     } else {
         document.body.classList.add('light-mode');
         document.body.classList.remove('dark-mode');
+        if (metaThemeColor) metaThemeColor.setAttribute('content', '#e0e5ec');
     }
 }
 
