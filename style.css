@@ -1512,6 +1512,7 @@ input[type="text"], input[type="number"], input[type="date"], select {
     align-items: center;
     justify-content: center;
     padding: 1.5rem;
+    overflow-y: auto;
     transition: opacity 0.4s ease;
 }
 
@@ -1610,6 +1611,27 @@ input[type="text"], input[type="number"], input[type="date"], select {
 }
 
 .auth-field input::placeholder { color: var(--text-muted); opacity: 0.7; }
+
+/* Password Toggle Icon */
+.pwd-toggle {
+    cursor: pointer;
+    color: var(--text-muted) !important;
+    font-size: 1.05rem !important;
+    padding: 0.2rem;
+    transition: color 0.2s;
+}
+
+.pwd-toggle:hover {
+    color: var(--text-color) !important;
+}
+
+/* Make auth cards scrollable if screen is very short */
+@media (max-height: 600px) {
+    #auth-screen {
+        align-items: flex-start;
+        padding-top: 2rem;
+    }
+}
 
 /* Error */
 .auth-error {

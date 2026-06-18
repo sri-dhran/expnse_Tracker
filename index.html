@@ -34,6 +34,7 @@
                     <div class="auth-field">
                         <i class="fas fa-lock"></i>
                         <input id="login-password" type="password" placeholder="Password" autocomplete="current-password" required>
+                        <i class="fas fa-eye pwd-toggle" onclick="togglePwdVisibility('login-password', this)"></i>
                     </div>
                     <p id="login-error" class="auth-error" style="display:none;"></p>
                     <button id="login-submit" type="submit" class="auth-btn">
@@ -64,10 +65,12 @@
                     <div class="auth-field">
                         <i class="fas fa-lock"></i>
                         <input id="signup-password" type="password" placeholder="Password" autocomplete="new-password" required>
+                        <i class="fas fa-eye pwd-toggle" onclick="togglePwdVisibility('signup-password', this)"></i>
                     </div>
                     <div class="auth-field">
                         <i class="fas fa-lock"></i>
                         <input id="signup-confirm" type="password" placeholder="Confirm password" autocomplete="new-password" required>
+                        <i class="fas fa-eye pwd-toggle" onclick="togglePwdVisibility('signup-confirm', this)"></i>
                     </div>
                     <p id="signup-error" class="auth-error" style="display:none;"></p>
                     <button id="signup-submit" type="submit" class="auth-btn">

@@ -72,6 +72,21 @@ async function login(username, password) {
 }
 
 // ── Auth-screen bootstrap ────────────────────────────────
+window.togglePwdVisibility = function(inputId, iconEl) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        iconEl.classList.remove('fa-eye');
+        iconEl.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        iconEl.classList.remove('fa-eye-slash');
+        iconEl.classList.add('fa-eye');
+    }
+};
+
 (function bootAuth() {
     const authEl = document.getElementById('auth-screen');
     const appEl  = document.querySelector('.app-container');
